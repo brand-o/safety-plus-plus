@@ -388,9 +388,68 @@
         #resetBtn.pressed {
             animation: resetPress 0.3s ease;
         }
+
+        /* Add to Home Screen prompt styling */
+        .add-to-home {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(11, 15, 26, 0.95);
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: opacity 0.3s ease;
+        }
+
+        .add-to-home.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .a2hs-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .a2hs-text {
+            color: #FAFAF9;
+            font-size: 0.9rem;
+        }
+
+        .a2hs-close {
+            background: none;
+            border: none;
+            color: #FAFAF9;
+            font-size: 1rem;
+            padding: 4px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .a2hs-arrow {
+            color: rgba(11, 15, 26, 0.95);
+            font-size: 1.5rem;
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
     </style>
 </head>
 <body>
+    <div id="addToHomeScreen" class="add-to-home hidden">
+        <div class="a2hs-content">
+            <div class="a2hs-text">Add to Home Screen</div>
+            <button class="a2hs-close">✕</button>
+        </div>
+        <div class="a2hs-arrow">▼</div>
+    </div>
     <div class="container">
         <div class="top-content">
             <div class="earnings-display">
@@ -953,6 +1012,36 @@
             } else {
                 document.body.classList.add('in-browser');
             }
+        });
+
+        function showAddToHomeScreen() {
+            const prompt = document.getElementById('addToHomeScreen');
+            
+            // Only show prompt if:
+            // 1. Running in iOS Safari
+            // 2. Not already in standalone mode
+            // 3. Not already dismissed by user
+            const isIOS = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+            const isStandalone = window.navigator.standalone;
+            const promptDismissed = localStorage.getItem('a2hsPromptDismissed');
+            
+            if (isIOS && !isStandalone && !promptDismissed) {
+                // Delay showing the prompt
+                setTimeout(() => {
+                    prompt.classList.remove('hidden');
+                }, 2000);
+            }
+        }
+
+        // Handle close button
+        document.querySelector('.a2hs-close')?.addEventListener('click', () => {
+            document.getElementById('addToHomeScreen').classList.add('hidden');
+            localStorage.setItem('a2hsPromptDismissed', 'true');
+        });
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            showAddToHomeScreen();
         });
     </script>
 </body>
