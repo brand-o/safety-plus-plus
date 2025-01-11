@@ -512,34 +512,45 @@
         });
 
         document.getElementById('resetBtn').addEventListener('click', () => {
-            if (earnings > 0) {
+            // Save current earnings before reset if timer has run
+            if (hasTimerRun && earnings > 0) {
                 lastAmounts.unshift(earnings);
-                if (lastAmounts.length > 5) lastAmounts.pop();
+                if (lastAmounts.length > 5) lastAmounts.pop(); // Keep only last 5
                 
+                // Update the display of last amounts
                 const lastAmountsContainer = document.querySelector('.last-amounts');
                 lastAmountsContainer.innerHTML = lastAmounts
-                    .map((amount, index) => `<div class="last-amount">L${index + 1}: $${amount.toFixed(2)}</div>`)
-                    .join('');
+                    .map((amount, index) => 
+                        `<div class="last-amount">L${index + 1}: $${amount.toFixed(2)}</div>`
+                    ).join('');
             }
             
+            // Reset all states
             isRunning = false;
             hasTimerRun = false;
             manualStopApplied = false;
             earnings = 0;
             time = 0;
             startTimestamp = null;
+            clearInterval(timerInterval);
             
+            // Reset display
+            document.getElementById('earnings').innerHTML = 
+                '<span class="dollars">$0</span><span class="cents">.00</span>';
+            document.getElementById('timer').textContent = '00:00:00';
+            document.getElementById('startTimeDisplay').textContent = ':';
+            document.getElementById('stopTimeDisplay').textContent = ':';
+            
+            // Reset inputs
+            document.getElementById('startTime').value = '';
+            document.getElementById('endTime').value = '';
+            
+            // Reset buttons
             document.getElementById('startBtn').disabled = false;
             document.getElementById('startBtn').classList.remove('running');
             document.getElementById('stopBtn').disabled = true;
             document.getElementById('stopBtn').classList.remove('stopped');
             
-            document.getElementById('startTime').value = '';
-            document.getElementById('endTime').value = '';
-            document.getElementById('startTimeDisplay').textContent = ':';
-            document.getElementById('stopTimeDisplay').textContent = ':';
-            
-            stopTimer();
             updateDisplay();
             updateAdvancedControlsState();
         });
