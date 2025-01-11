@@ -40,6 +40,20 @@
             width: 100%;
         }
 
+        .in-browser .container {
+            padding-top: 3rem;
+            padding-bottom: 4rem;
+        }
+
+        .standalone .container {
+            padding-top: calc(1rem + env(safe-area-inset-top));
+            padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+        }
+
+        .standalone .earnings-display {
+            margin-top: env(safe-area-inset-top);
+        }
+
         .top-content {
             flex: 1;
         }
@@ -929,6 +943,15 @@
             } else {
                 alert('Please enter a valid pay rate');
                 customRateInput.value = customPayRate || '';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Detect if running as installed app or in browser
+            if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+                document.body.classList.add('standalone');
+            } else {
+                document.body.classList.add('in-browser');
             }
         });
     </script>
