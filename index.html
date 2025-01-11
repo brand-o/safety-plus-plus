@@ -641,8 +641,11 @@
                 return;
             }
 
+            const formattedTime = `${String(startHours).padStart(2, '0')}:${String(startMinutes).padStart(2, '0')}`;
+            document.querySelector('.time-status:first-child .time-placeholder').textContent = formattedTime;
+
             const now = new Date();
-            const startDate = new Date(Date.UTC(
+            startTimestamp = new Date(Date.UTC(
                 now.getUTCFullYear(),
                 now.getUTCMonth(),
                 now.getUTCDate(),
@@ -650,11 +653,7 @@
                 startMinutes,
                 0,
                 0
-            ));
-
-            startTimestamp = startDate.getTime();
-            document.getElementById('startTimeDisplay').textContent = 
-                `${startHours.toString().padStart(2, '0')}:${startMinutes.toString().padStart(2, '0')}`;
+            )).getTime();
         });
 
         document.getElementById('applyEndTime').addEventListener('click', function() {
@@ -670,10 +669,10 @@
                 return;
             }
 
-            const startTimeDisplay = document.getElementById('startTimeDisplay').textContent;
+            const startTimeDisplay = document.querySelector('.time-status:first-child .time-placeholder').textContent;
             const startMatch = startTimeDisplay.match(/(\d{2}):(\d{2})/);
             
-            if (!startMatch) {
+            if (!startMatch || startTimeDisplay === ':') {
                 alert('Could not determine start time');
                 return;
             }
@@ -688,6 +687,9 @@
                 return;
             }
 
+            const formattedEndTime = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+            document.querySelector('.time-status:last-child .time-placeholder').textContent = formattedEndTime;
+
             const startMinutesSinceMidnight = (startHours * 60) + startMinutes;
             const endMinutesSinceMidnight = (endHours * 60) + endMinutes;
 
@@ -698,13 +700,11 @@
 
             time = elapsedMinutes * 60;
             earnings = (elapsedMinutes / 60) * getCurrentRate();
-
+            
             document.getElementById('timer').textContent = formatTime(time);
             const [dollars, cents] = earnings.toFixed(2).split('.');
             document.getElementById('earnings').innerHTML = 
                 `<span class="dollars">$${dollars}</span><span class="cents">.${cents}</span>`;
-            document.getElementById('stopTimeDisplay').textContent = 
-                `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
             
             manualStopApplied = true;
             updateAdvancedControlsState();
@@ -755,6 +755,35 @@
                     });
             });
         }
+
+        // Update the leg tracking
+        let currentLeg = 1;
+
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            if (hasTimerRun && earnings > 0) {
+                // Add current earnings to the last amounts with the current leg number
+                lastAmounts[currentLeg - 1] = earnings;
+                
+                // Update display
+                const lastAmountsContainer = document.querySelector('.last-amounts');
+                lastAmountsContainer.innerHTML = Object.entries(lastAmounts)
+                    .map(([index, amount]) => 
+                        `<div class="last-amount">L${parseInt(index) + 1}: $${amount.toFixed(2)}</div>`
+                    ).join('');
+                    
+                // Increment leg counter for next run
+                currentLeg = Math.min(currentLeg + 1, 4);
+            }
+            
+            // If we've completed 4 legs, reset the counter and clear history
+            if (currentLeg > 4) {
+                currentLeg = 1;
+                lastAmounts = [];
+                document.querySelector('.last-amounts').innerHTML = '';
+            }
+
+            // ... rest of reset code ...
+        });
     </script>
 </body>
 </html>
