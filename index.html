@@ -396,13 +396,12 @@
             left: 50%;
             transform: translateX(-50%);
             background: rgba(11, 15, 26, 0.95);
-            padding: 12px 24px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
             z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            max-width: 280px;
+            width: 90%;
             transition: opacity 0.3s ease;
         }
 
@@ -411,25 +410,46 @@
             pointer-events: none;
         }
 
-        .a2hs-content {
+        .a2hs-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 12px;
+            margin-bottom: 12px;
         }
 
-        .a2hs-text {
+        .a2hs-title {
             color: #FAFAF9;
-            font-size: 0.9rem;
+            font-size: 1.1rem;
+            font-weight: bold;
         }
 
         .a2hs-close {
             background: none;
             border: none;
             color: #FAFAF9;
-            font-size: 1rem;
+            font-size: 1.1rem;
             padding: 4px;
             cursor: pointer;
             opacity: 0.7;
+        }
+
+        .a2hs-instructions {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .instruction-step {
+            color: #FAFAF9;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .share-icon, .add-icon, .menu-icon {
+            color: #FAFAF9;
+            vertical-align: middle;
         }
 
         .a2hs-arrow {
@@ -445,8 +465,35 @@
 <body>
     <div id="addToHomeScreen" class="add-to-home hidden">
         <div class="a2hs-content">
-            <div class="a2hs-text">Add to Home Screen</div>
-            <button class="a2hs-close">✕</button>
+            <div class="a2hs-header">
+                <div class="a2hs-title">Install App</div>
+                <button class="a2hs-close">✕</button>
+            </div>
+            <!-- iOS Instructions -->
+            <div class="a2hs-instructions ios-instructions">
+                <div class="instruction-step">
+                    1. Tap <svg class="share-icon" viewBox="0 0 24 24" width="18" height="18">
+                        <path fill="currentColor" d="M16,2L12,6V13H8V6L4,2H16M12,6L16,2L20,6H16V13H12V6Z"/>
+                    </svg> below
+                </div>
+                <div class="instruction-step">
+                    2. Select <svg class="add-icon" viewBox="0 0 24 24" width="18" height="18">
+                        <path fill="currentColor" d="M17,13H13V17H11V13H7V11H11V7H13V11H17V13Z"/>
+                        <rect fill="none" stroke="currentColor" x="3" y="3" width="18" height="18" rx="4"/>
+                    </svg> Add to Home Screen
+                </div>
+            </div>
+            <!-- Android Instructions -->
+            <div class="a2hs-instructions android-instructions">
+                <div class="instruction-step">
+                    1. Tap <svg class="menu-icon" viewBox="0 0 24 24" width="18" height="18">
+                        <path fill="currentColor" d="M12,16A2,2 0 0,1 14,18A2,2 0 0,1 12,20A2,2 0 0,1 10,18A2,2 0 0,1 12,16M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4Z"/>
+                    </svg> menu
+                </div>
+                <div class="instruction-step">
+                    2. Tap Install App
+                </div>
+            </div>
         </div>
         <div class="a2hs-arrow">▼</div>
     </div>
@@ -1016,16 +1063,24 @@
 
         function showAddToHomeScreen() {
             const prompt = document.getElementById('addToHomeScreen');
-            
-            // Only show prompt if:
-            // 1. Running in iOS Safari
-            // 2. Not already in standalone mode
-            // 3. Not already dismissed by user
             const isIOS = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-            const isStandalone = window.navigator.standalone;
+            const isAndroid = /android/.test(window.navigator.userAgent.toLowerCase());
+            const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
             const promptDismissed = localStorage.getItem('a2hsPromptDismissed');
             
-            if (isIOS && !isStandalone && !promptDismissed) {
+            if ((isIOS || isAndroid) && !isStandalone && !promptDismissed) {
+                // Show OS-specific instructions
+                const iosInstructions = prompt.querySelector('.ios-instructions');
+                const androidInstructions = prompt.querySelector('.android-instructions');
+                
+                if (isIOS) {
+                    iosInstructions.style.display = 'flex';
+                    androidInstructions.style.display = 'none';
+                } else if (isAndroid) {
+                    iosInstructions.style.display = 'none';
+                    androidInstructions.style.display = 'flex';
+                }
+                
                 // Delay showing the prompt
                 setTimeout(() => {
                     prompt.classList.remove('hidden');
