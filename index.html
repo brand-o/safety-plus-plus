@@ -495,7 +495,8 @@
             const startHours = String(now.getUTCHours()).padStart(2, '0');
             const startMinutes = String(now.getUTCMinutes()).padStart(2, '0');
             
-            document.getElementById('startTimeDisplay').textContent = `${startHours}:${startMinutes}`;
+            const startTimeDisplay = document.querySelector('.time-status:first-child .time-placeholder');
+            startTimeDisplay.textContent = `${startHours}:${startMinutes}`;
             document.getElementById('startTime').value = `${startHours}${startMinutes}`;
         }
 
@@ -506,7 +507,8 @@
             const stopHours = String(now.getUTCHours()).padStart(2, '0');
             const stopMinutes = String(now.getUTCMinutes()).padStart(2, '0');
             
-            document.getElementById('stopTimeDisplay').textContent = `${stopHours}:${stopMinutes}`;
+            const stopTimeDisplay = document.querySelector('.time-status:last-child .time-placeholder');
+            stopTimeDisplay.textContent = `${stopHours}:${stopMinutes}`;
             document.getElementById('endTime').value = `${stopHours}${stopMinutes}`;
         }
         document.getElementById('startBtn').addEventListener('click', () => {
@@ -564,8 +566,8 @@
             document.getElementById('earnings').innerHTML = 
                 '<span class="dollars">$0</span><span class="cents">.00</span>';
             document.getElementById('timer').textContent = '00:00:00';
-            document.getElementById('startTimeDisplay').textContent = ':';
-            document.getElementById('stopTimeDisplay').textContent = ':';
+            document.querySelector('.time-status:first-child .time-placeholder').textContent = ':';
+            document.querySelector('.time-status:last-child .time-placeholder').textContent = ':';
             
             document.getElementById('startTime').value = '';
             document.getElementById('endTime').value = '';
