@@ -160,6 +160,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            color: #FAFAF9;
         }
 
         .top-buttons {
@@ -317,13 +318,8 @@
             color: #D17B0F;
         }
 
-        #resetBtn:active {
-            background: #D17B0F;
-            color: #020209;
-        }
-
-        #resetBtn:not(:active) {
-            background: transparent;
+        #resetBtn.pressed {
+            animation: resetPress 0.3s ease;
         }
 
         button:disabled {
@@ -333,6 +329,12 @@
 
         .controls {
             margin-bottom: 1.5rem;
+        }
+
+        @keyframes resetPress {
+            0% { background: transparent; color: #D17B0F; }
+            50% { background: #D17B0F; color: #020209; }
+            100% { background: transparent; color: #D17B0F; }
         }
     </style>
 </head>
@@ -488,7 +490,7 @@
                 updateDisplay();
             }, 1000);
 
-            const startDate = new Date(startTimestamp);
+            const startDate = new Date();
             const startHours = String(startDate.getUTCHours()).padStart(2, '0');
             const startMinutes = String(startDate.getUTCMinutes()).padStart(2, '0');
             document.getElementById('startTimeDisplay').textContent = `${startHours}:${startMinutes}`;
@@ -497,13 +499,11 @@
 
         function stopTimer() {
             clearInterval(timerInterval);
-            if (startTimestamp) {
-                const stopDate = new Date();
-                const stopHours = String(stopDate.getUTCHours()).padStart(2, '0');
-                const stopMinutes = String(stopDate.getUTCMinutes()).padStart(2, '0');
-                document.getElementById('stopTimeDisplay').textContent = `${stopHours}:${stopMinutes}`;
-                document.getElementById('endTime').value = `${stopHours}${stopMinutes}`;
-            }
+            const stopDate = new Date();
+            const stopHours = String(stopDate.getUTCHours()).padStart(2, '0');
+            const stopMinutes = String(stopDate.getUTCMinutes()).padStart(2, '0');
+            document.getElementById('stopTimeDisplay').textContent = `${stopHours}:${stopMinutes}`;
+            document.getElementById('endTime').value = `${stopHours}${stopMinutes}`;
         }
         document.getElementById('startBtn').addEventListener('click', () => {
             if (lastAmounts.length >= 4) {
@@ -531,10 +531,16 @@
             updateAdvancedControlsState();
         });
 
-        document.getElementById('resetBtn').addEventListener('click', () => {
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            this.classList.add('pressed');
+            
+            setTimeout(() => {
+                this.classList.remove('pressed');
+            }, 300);
+
             if (hasTimerRun && earnings > 0) {
                 lastAmounts.unshift(earnings);
-                if (lastAmounts.length > 4) lastAmounts.pop(); // Keep only last 4
+                if (lastAmounts.length > 4) lastAmounts.pop();
                 
                 const lastAmountsContainer = document.querySelector('.last-amounts');
                 lastAmountsContainer.innerHTML = lastAmounts
@@ -543,7 +549,6 @@
                     ).join('');
             }
             
-            // Reset all states
             isRunning = false;
             hasTimerRun = false;
             manualStopApplied = false;
@@ -552,18 +557,15 @@
             startTimestamp = null;
             clearInterval(timerInterval);
             
-            // Reset display
             document.getElementById('earnings').innerHTML = 
                 '<span class="dollars">$0</span><span class="cents">.00</span>';
             document.getElementById('timer').textContent = '00:00:00';
             document.getElementById('startTimeDisplay').textContent = ':';
             document.getElementById('stopTimeDisplay').textContent = ':';
             
-            // Reset inputs
             document.getElementById('startTime').value = '';
             document.getElementById('endTime').value = '';
             
-            // Reset buttons
             document.getElementById('startBtn').disabled = false;
             document.getElementById('startBtn').classList.remove('running');
             document.getElementById('stopBtn').disabled = true;
