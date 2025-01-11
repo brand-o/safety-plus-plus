@@ -272,13 +272,18 @@
         }
 
         .controls {
-            margin-bottom: 1.5rem;
+            margin-bottom: 0;
         }
         #advancedControls {
             background: #0B0F1A;
-            border-radius: 0.375rem;
+            border: 2px solid #5F7470;
+            border-top: none;
+            border-radius: 0 0 0.375rem 0.375rem;
             padding: 1rem;
-            margin-bottom: 1rem;
+            margin-top: -1px;
+            position: relative;
+            z-index: 1;
+            margin-bottom: 1.5rem;
         }
 
         .input-group {
@@ -328,6 +333,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 1rem;
+            margin-top: 1.5rem;
         }
 
         #startBtn, #stopBtn, #resetBtn {
@@ -570,6 +576,50 @@
             margin-left: auto;
             margin-right: auto;
         }
+
+        .comparison-text {
+            font-size: 0.875rem;
+            text-align: center;
+            color: #FAFAF9;
+            opacity: 0.8;
+            margin-top: 0.25rem;
+        }
+
+        .advanced-btn {
+            width: 100%;
+            padding: 0.75rem 0;
+            background: #0B0F1A;
+            border-radius: 0.375rem;
+            font-weight: bold;
+            cursor: pointer;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            margin-bottom: 0;
+            border: 2px solid #5F7470;
+            color: #5F7470;
+            position: relative;
+            z-index: 2;
+            border-bottom-width: 1px;
+        }
+
+        #advancedControls {
+            background: #0B0F1A;
+            border: 2px solid #5F7470;
+            border-top: none;
+            border-radius: 0 0 0.375rem 0.375rem;
+            padding: 1rem;
+            margin-top: -2px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .advanced-btn.open {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
     </style>
 </head>
 <body>
@@ -718,6 +768,16 @@
                         <input type="number" id="compareRate" placeholder="0.00" step="0.01" min="0" disabled>
                     </div>
                 </div>
+
+                <div class="input-group">
+                    <div class="compare-header">
+                        <label>Per Day Mode</label>
+                        <label class="compare-toggle">
+                            <input type="checkbox" id="perDayToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
             </div>
 
             <div class="button-group">
@@ -820,32 +880,44 @@
             const lastAmountsContainer = document.querySelector('.last-amounts');
             let html = '';
             
-            // Ensure we have colors assigned for all legs
-            while (legColorAssignments.length < legAmounts.length) {
-                legColorAssignments.push(getNewLegColor());
-            }
-            
-            // Display all stored legs with their assigned colors
+            // Display all stored legs
             for (let i = 0; i < legAmounts.length; i++) {
+                // Ensure we have a color for this leg
+                while (legColorAssignments.length <= i) {
+                    legColorAssignments.push(getNewLegColor());
+                }
+                
+                // Round each leg amount to 2 decimal places
+                const roundedAmount = Math.round(legAmounts[i] * 100) / 100;
+                
                 html += `
                     <div class="last-amount">
                         <div class="leg-number" style="background-color: ${legColorAssignments[i]}">
                             ${i + 1}
                         </div>
-                        $${legAmounts[i].toFixed(2)}
+                        $${roundedAmount.toFixed(2)}
                     </div>`;
             }
             lastAmountsContainer.innerHTML = html;
 
-            // Calculate and display total only if we have at least one completed leg AND
-            // either a second leg is completed or running
+            // Calculate and display total
             const existingTotal = document.querySelector('.total-amount');
             if (existingTotal) {
                 existingTotal.remove();
             }
 
-            if (legAmounts.length > 1 || (legAmounts.length === 1 && hasTimerRun)) {
-                const total = legAmounts.reduce((sum, amount) => sum + amount, 0);
+            if (legAmounts.length > 0 || isRunning) {
+                // Sum up completed legs with proper rounding
+                const completedTotal = legAmounts.reduce((sum, amount) => {
+                    return sum + Math.round(amount * 100) / 100;
+                }, 0);
+                
+                // Add current earnings if timer is running (already rounded in the display)
+                const currentAmount = isRunning ? Math.round(earnings * 100) / 100 : 0;
+                
+                // Calculate final total with one final rounding
+                const total = Math.round((completedTotal + currentAmount) * 100) / 100;
+                
                 lastAmountsContainer.insertAdjacentHTML('afterend', 
                     `<div class="total-amount">Total: $${total.toFixed(2)}</div>`);
             }
@@ -860,6 +932,7 @@
                 time = Math.floor((Date.now() - startTimestamp) / 1000);
                 earnings = (time / 3600) * getCurrentRate();
                 updateDisplay();
+                updateLegDisplay();
             }, 1000);
 
             const now = new Date();
@@ -911,47 +984,44 @@
         });
 
         document.getElementById('resetBtn').addEventListener('click', function() {
-            this.classList.add('pressed');
-            setTimeout(() => {
-                this.classList.remove('pressed');
-            }, 300);
-
             if (hasTimerRun && earnings > 0) {
-                legAmounts.push(earnings);
+                // Store the exact current earnings amount, rounded to 2 decimal places
+                const exactAmount = Math.round((time / 3600) * getCurrentRate() * 100) / 100;
+                legAmounts.push(exactAmount);
                 
-                // If we just added the final leg, flag for reset on next start
                 if (legAmounts.length >= maxLegs) {
                     shouldResetLegs = true;
                 }
-                
-                updateLegDisplay();
             }
             
-            // Reset all states
+            // Reset all timer-related states
             isRunning = false;
             hasTimerRun = false;
             manualStopApplied = false;
-            earnings = 0;
-            time = 0;
             startTimestamp = null;
+            time = 0;
+            earnings = 0;
             clearInterval(timerInterval);
             
-            document.getElementById('earnings').innerHTML = 
-                '<span class="dollars">$0</span><span class="cents">.00</span>';
+            // Reset displays
+            document.getElementById('earnings').innerHTML = '<span class="dollars">$0</span><span class="cents">.00</span>';
             document.getElementById('timer').textContent = '00:00:00';
             document.querySelector('.time-status:first-child .time-placeholder').textContent = ':';
             document.querySelector('.time-status:last-child .time-placeholder').textContent = ':';
             
-            document.getElementById('startTime').value = '';
-            document.getElementById('endTime').value = '';
-            
-            document.getElementById('startBtn').disabled = false;
             document.getElementById('startBtn').classList.remove('running');
-            document.getElementById('stopBtn').disabled = true;
             document.getElementById('stopBtn').classList.remove('stopped');
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('resetBtn').disabled = false;
             
+            // Update displays
+            updateLegDisplay();
             updateDisplay();
             updateAdvancedControlsState();
+            
+            const resetBtn = document.getElementById('resetBtn');
+            resetBtn.classList.add('pressed');
+            setTimeout(() => resetBtn.classList.remove('pressed'), 300);
         });
 
         document.getElementById('captainBtn').addEventListener('click', function() {
@@ -1001,6 +1071,7 @@
             const isHidden = advancedControls.style.display === 'none';
             advancedControls.style.display = isHidden ? 'block' : 'none';
             this.textContent = isHidden ? 'Hide Advanced Controls' : 'Show Advanced Controls';
+            this.classList.toggle('open', isHidden);
         });
 
         document.getElementById('applyStartTime').addEventListener('click', function() {
@@ -1225,34 +1296,37 @@
         // Add this function to calculate comparison amounts
         function updateComparisonDisplay() {
             const compareRate = parseFloat(document.getElementById('compareRate').value) || 0;
-            const compareAmount = (time / 3600) * compareRate;
+            const isPerDayMode = document.getElementById('perDayToggle').checked;
             
-            const existingComparison = document.querySelector('.comparison-amount');
-            if (existingComparison) {
-                existingComparison.remove();
-            }
+            const existingComparisons = document.querySelectorAll('.comparison-amount, .comparison-text');
+            existingComparisons.forEach(comp => comp.remove());
             
             if (compareRate > 0 && document.getElementById('compareToggle').checked) {
                 // Calculate comparison for current leg
                 const currentCompare = (time / 3600) * compareRate;
                 
-                // Calculate comparison for all completed legs
-                const completedLegsCompare = legAmounts.length > 0 ? 
-                    legAmounts.reduce((sum, amount) => {
-                        const legTime = (amount / getCurrentRate()) * 3600; // Convert back to seconds
-                        return sum + ((legTime / 3600) * compareRate);
-                    }, 0) : 0;
-                
-                // Add total comparison amount after the total amount
-                const totalAmount = document.querySelector('.total-amount');
-                if (totalAmount) {
-                    totalAmount.insertAdjacentHTML('afterend', 
-                        `<div class="comparison-amount">Compare Total: $${(completedLegsCompare + currentCompare).toFixed(2)}</div>`);
+                if (isPerDayMode) {
+                    // Per Day Mode: Sum all legs together
+                    const completedLegsCompare = legAmounts.length > 0 ? 
+                        legAmounts.reduce((sum, amount) => {
+                            const legTime = (amount / getCurrentRate()) * 3600;
+                            return sum + ((legTime / 3600) * compareRate);
+                        }, 0) : 0;
+                    
+                    const totalCompare = completedLegsCompare + (hasTimerRun ? currentCompare : 0);
+                    
+                    // Add total comparison amount after the total amount
+                    const totalAmount = document.querySelector('.total-amount');
+                    if (totalAmount) {
+                        totalAmount.insertAdjacentHTML('afterend', 
+                            `<div class="comparison-amount">Compare Day Total: $${totalCompare.toFixed(2)}</div>`);
+                    }
                 } else {
-                    const lastAmounts = document.querySelector('.last-amounts');
-                    if (lastAmounts) {
-                        lastAmounts.insertAdjacentHTML('afterend', 
-                            `<div class="comparison-amount">Compare: $${currentCompare.toFixed(2)}</div>`);
+                    // Per Leg Mode: Show simple text comparison below current earnings
+                    const earningsDisplay = document.getElementById('earnings');
+                    if (earningsDisplay) {
+                        earningsDisplay.insertAdjacentHTML('afterend', 
+                            `<div class="comparison-text">Compare: $${currentCompare.toFixed(2)}</div>`);
                     }
                 }
             }
@@ -1273,6 +1347,13 @@
         });
 
         document.getElementById('compareRate').addEventListener('input', function() {
+            if (document.getElementById('compareToggle').checked) {
+                updateComparisonDisplay();
+            }
+        });
+
+        // Add event listener for the per day toggle
+        document.getElementById('perDayToggle').addEventListener('change', function() {
             if (document.getElementById('compareToggle').checked) {
                 updateComparisonDisplay();
             }
