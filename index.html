@@ -161,6 +161,7 @@
             align-items: center;
             justify-content: center;
             color: #FAFAF9;
+            background: transparent;
         }
 
         .top-buttons {
@@ -310,7 +311,7 @@
 
         #stopBtn.stopped {
             background: #A33B20;
-            color: #666;
+            color: #020209;
         }
 
         #resetBtn {
@@ -490,18 +491,21 @@
                 updateDisplay();
             }, 1000);
 
-            const startDate = new Date();
-            const startHours = String(startDate.getUTCHours()).padStart(2, '0');
-            const startMinutes = String(startDate.getUTCMinutes()).padStart(2, '0');
+            const now = new Date();
+            const startHours = String(now.getUTCHours()).padStart(2, '0');
+            const startMinutes = String(now.getUTCMinutes()).padStart(2, '0');
+            
             document.getElementById('startTimeDisplay').textContent = `${startHours}:${startMinutes}`;
             document.getElementById('startTime').value = `${startHours}${startMinutes}`;
         }
 
         function stopTimer() {
             clearInterval(timerInterval);
-            const stopDate = new Date();
-            const stopHours = String(stopDate.getUTCHours()).padStart(2, '0');
-            const stopMinutes = String(stopDate.getUTCMinutes()).padStart(2, '0');
+            
+            const now = new Date();
+            const stopHours = String(now.getUTCHours()).padStart(2, '0');
+            const stopMinutes = String(now.getUTCMinutes()).padStart(2, '0');
+            
             document.getElementById('stopTimeDisplay').textContent = `${stopHours}:${stopMinutes}`;
             document.getElementById('endTime').value = `${stopHours}${stopMinutes}`;
         }
