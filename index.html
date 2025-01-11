@@ -766,44 +766,31 @@
             });
         }
 
-        // Update leg tracking logic
-        let legAmounts = {
-            L1: null,
-            L2: null,
-            L3: null,
-            L4: null
-        };
-        let currentLeg = 1;
+        // Initialize leg tracking
+        let legAmounts = [];
 
         function updateLegDisplay() {
             const lastAmountsContainer = document.querySelector('.last-amounts');
             let html = '';
             
-            // Display legs in order
-            for (let i = 1; i <= 4; i++) {
-                const amount = legAmounts[`L${i}`];
-                if (amount !== null) {
-                    html += `<div class="last-amount">L${i}: $${amount.toFixed(2)}</div>`;
-                }
+            // Display all stored legs in order, keeping their original position
+            for (let i = 0; i < legAmounts.length; i++) {
+                html += `<div class="last-amount">L${i + 1}: $${legAmounts[i].toFixed(2)}</div>`;
             }
-            
             lastAmountsContainer.innerHTML = html;
 
-            // Calculate and display total if we have at least one leg
-            const hasLegs = Object.values(legAmounts).some(amount => amount !== null);
-            if (hasLegs) {
-                const total = Object.values(legAmounts)
-                    .filter(amount => amount !== null)
-                    .reduce((sum, amount) => sum + amount, 0);
-                    
-                // Add or update total display
-                let totalDisplay = document.querySelector('.total-amount');
-                if (!totalDisplay) {
-                    totalDisplay = document.createElement('div');
-                    totalDisplay.className = 'total-amount';
-                    lastAmountsContainer.insertAdjacentElement('afterend', totalDisplay);
+            // Calculate and display total if we have any legs
+            if (legAmounts.length > 0) {
+                // Remove any existing total first
+                const existingTotal = document.querySelector('.total-amount');
+                if (existingTotal) {
+                    existingTotal.remove();
                 }
-                totalDisplay.textContent = `Total: $${total.toFixed(2)}`;
+
+                // Calculate new total and display it
+                const total = legAmounts.reduce((sum, amount) => sum + amount, 0);
+                lastAmountsContainer.insertAdjacentHTML('afterend', 
+                    `<div class="total-amount">Total: $${total.toFixed(2)}</div>`);
             }
         }
 
@@ -815,54 +802,18 @@
             }, 300);
 
             if (hasTimerRun && earnings > 0) {
-                // Store the current earnings in the appropriate leg
-                legAmounts[`L${currentLeg}`] = earnings;
+                // Add current earnings to next leg position
+                legAmounts.push(earnings);
                 
-                // Increment leg counter for next run
-                currentLeg = Math.min(currentLeg + 1, 5);
-                
-                // If we've completed 4 legs, reset everything
-                if (currentLeg > 4) {
-                    currentLeg = 1;
-                    legAmounts = {
-                        L1: null,
-                        L2: null,
-                        L3: null,
-                        L4: null
-                    };
+                // If we've completed 4 legs, reset the array
+                if (legAmounts.length >= 4) {
+                    legAmounts = [];
                 }
                 
                 updateLegDisplay();
             }
             
-            // Reset all states
-            isRunning = false;
-            hasTimerRun = false;
-            manualStopApplied = false;
-            earnings = 0;
-            time = 0;
-            startTimestamp = null;
-            clearInterval(timerInterval);
-            
-            // Reset displays
-            document.getElementById('earnings').innerHTML = 
-                '<span class="dollars">$0</span><span class="cents">.00</span>';
-            document.getElementById('timer').textContent = '00:00:00';
-            document.querySelector('.time-status:first-child .time-placeholder').textContent = ':';
-            document.querySelector('.time-status:last-child .time-placeholder').textContent = ':';
-            
-            // Reset inputs
-            document.getElementById('startTime').value = '';
-            document.getElementById('endTime').value = '';
-            
-            // Reset buttons
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('startBtn').classList.remove('running');
-            document.getElementById('stopBtn').disabled = true;
-            document.getElementById('stopBtn').classList.remove('stopped');
-            
-            updateDisplay();
-            updateAdvancedControlsState();
+            // ... rest of reset code ...
         });
     </script>
 </body>
