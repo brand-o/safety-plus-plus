@@ -301,9 +301,15 @@
             color: #A33B20;
         }
 
-        #stopBtn.stopped {
+        #stopBtn:disabled {
+            opacity: 0.5;
+            color: #666;
             background: transparent;
-            color: #A33B20;
+        }
+
+        #stopBtn.stopped {
+            background: #A33B20;
+            color: #666;
         }
 
         #resetBtn {
@@ -311,14 +317,13 @@
             color: #D17B0F;
         }
 
-        #resetBtn:hover:not(:disabled) {
+        #resetBtn:active {
             background: #D17B0F;
             color: #020209;
         }
 
-        #resetBtn:not(:hover) {
+        #resetBtn:not(:active) {
             background: transparent;
-            color: #D17B0F;
         }
 
         button:disabled {
@@ -501,6 +506,11 @@
             }
         }
         document.getElementById('startBtn').addEventListener('click', () => {
+            if (lastAmounts.length >= 4) {
+                lastAmounts = [];
+                document.querySelector('.last-amounts').innerHTML = '';
+            }
+            
             isRunning = true;
             hasTimerRun = true;
             document.getElementById('startBtn').disabled = true;
