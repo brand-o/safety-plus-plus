@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#020209">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <title>Safety++</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #FAFAF9;
+        }
+
+        body {
+            background: #020209;
+            min-height: 100vh;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .earnings-display {
+            background: #0B0F1A;
+            border-radius: 0.375rem;
+            padding: 2rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        #earnings {
+            font-size: 3.5rem;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: flex-start;
+        }
+
+        .dollars {
+            font-size: 3.5rem;
+            line-height: 1;
+        }
+
+        .cents {
+            font-size: 1.75rem;
+            margin-left: 2px;
+        }
+
+        .info-boxes {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-box {
+            background: #0B0F1A;
+            border-radius: 0.375rem;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 80px;
+        }
+
+        #timer, #rate {
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+
+        .time-status-box {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .time-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .status-icon {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        .play-icon {
+            background: #99AA38;
+        }
+
+        .stop-icon {
+            background: #A33B20;
+        }
+
+        .time-placeholder {
+            font-family: monospace;
+            font-size: 1.25rem;
+            letter-spacing: 1px;
+        }
+
+        .controls {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .select-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            background: #1a1a1a;
+            border: 2px solid #ef4444;
+            border-radius: 0.375rem;
+            color: #e5e7eb;
+            font-weight: bold;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .modifier-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: #0B0F1A;
+            border: 2px solid #FAFAF9;
+            border-radius: 0.375rem;
+            color: #FAFAF9;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        #premiumBtn {
+            border-color: #628395;
+            color: #628395;
+        }
+
+        #premiumBtn.active {
+            background-color: #628395;
+            color: #FAFAF9;
+        }
+
+        #vfnBtn {
+            border-color: #DD4B42;
+            color: #DD4B42;
+        }
+
+        #vfnBtn.active {
+            background-color: #DD4B42;
+            color: #FAFAF9;
+        }
+
+        .advanced-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: #0B0F1A;
+            border: 2px solid #FAFAF9;
+            border-radius: 0.375rem;
+            color: #FAFAF9;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #advancedControls {
+            max-height: 30vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+            margin-top: 0.5rem;
+            background: #0B0F1A;
+            border-radius: 0.375rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group label {
+            display: block;
+            color: #FAFAF9;
+            margin-bottom: 0.5rem;
+        }
+
+        .input-with-button {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .input-with-button input {
+            flex: 1;
+            padding: 0.75rem;
+            background: #0B0F1A;
+            border: 2px solid #FAFAF9;
+            border-radius: 0.375rem;
+            color: #FAFAF9;
+        }
+
+        .apply-btn {
+            padding: 0.75rem 1rem;
+            background: #0B0F1A;
+            border: 2px solid #FAFAF9;
+            border-radius: 0.375rem;
+            color: #FAFAF9;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+            margin-bottom: 0;
+        }
+
+        .action-btn {
+            padding: 0.75rem;
+            border: 2px solid;
+            border-radius: 0.375rem;
+            background: #1a1a1a;
+            color: #ffffff;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #startBtn {
+            height: 60px;
+            background: #0B0F1A;
+            border: 2px solid #7CE76F;
+            color: #7CE76F;
+        }
+
+        #startBtn:hover:not(:disabled) {
+            background: #7CE76F;
+            color: #03030E;
+        }
+
+        #stopBtn {
+            height: 60px;
+            background: #0B0F1A;
+            border: 2px solid #DD4B42;
+            color: #DD4B42;
+        }
+
+        #stopBtn:hover:not(:disabled) {
+            background: #DD4B42;
+            color: #FAFAF9;
+        }
+
+        #resetBtn {
+            height: 60px;
+            background: #0B0F1A;
+            border: 2px solid #D1CE3E;
+            color: #D1CE3E;
+        }
+
+        #resetBtn:hover:not(:disabled) {
+            background: #D1CE3E;
+            color: #03030E;
+        }
+
+        button:disabled, input:disabled, select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .top-buttons {
+            display: flex;
+            align-items: stretch;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .position-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .modifier-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .position-btn, .modifier-btn, .year-select, .advanced-btn {
+            padding: 0.75rem 1.5rem;
+            background: #0B0F1A;
+            border-radius: 0.375rem;
+            font-weight: bold;
+            cursor: pointer;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        #captainBtn, #foBtn, .year-select, .advanced-btn {
+            border: 2px solid #5F7470;
+            color: #5F7470;
+        }
+
+        #captainBtn.active, #foBtn.active {
+            background: #5F7470;
+            color: #FAFAF9;
+        }
+
+        #premiumBtn {
+            border: 2px solid #628395;
+            color: #628395;
+        }
+
+        #premiumBtn.active {
+            background: #628395;
+            color: #FAFAF9;
+        }
+
+        #vfnBtn {
+            border: 2px solid #DD4B42;
+            color: #DD4B42;
+        }
+
+        #vfnBtn.active {
+            background: #DD4B42;
+            color: #FAFAF9;
+        }
+
+        .year-select {
+            min-width: 100px;
+            appearance: none;
+        }
+
+        #advancedControls {
+            background: #0B0F1A;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .input-with-button {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .input-with-button input {
+            flex: 1;
+            padding: 0.75rem;
+            background: #0B0F1A;
+            border: 2px solid #FAFAF9;
+            border-radius: 0.375rem;
+            color: #FAFAF9;
+        }
+
+        .input-with-button input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .apply-btn {
+            padding: 0.75rem 1.5rem;
+            background: #0B0F1A;
+            border: 2px solid #FAFAF9;
+            border-radius: 0.375rem;
+            color: #FAFAF9;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .apply-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+        }
+
+        #startBtn, #stopBtn, #resetBtn {
+            height: 60px;
+            padding: 0.75rem;
+            background: #0B0F1A;
+            border-radius: 0.375rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        #startBtn {
+            border: 2px solid #99AA38;
+            color: #99AA38;
+        }
+
+        #startBtn:hover:not(:disabled) {
+            background: #99AA38;
+            color: #020209;
+        }
+
+        #stopBtn {
+            border: 2px solid #A33B20;
+            color: #A33B20;
+        }
+
+        #stopBtn:hover:not(:disabled) {
+            background: #A33B20;
+            color: #FAFAF9;
+        }
+
+        #resetBtn {
+            border: 2px solid #D17B0F;
+            color: #D17B0F;
+        }
+
+        #resetBtn:hover:not(:disabled) {
+            background: #D17B0F;
+            color: #020209;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-content">
+            <div class="earnings-display">
+                <div id="earnings">
+                    <span class="dollars">$0</span><span class="cents">.00</span>
+                </div>
+            </div>
+            
+            <div class="info-boxes">
+                <div class="info-box">
+                    <div id="timer">00:00:00</div>
+                </div>
+                <div class="info-box">
+                    <div id="rate">$0.00/hr</div>
+                </div>
+                <div class="info-box">
+                    <div class="time-status-box">
+                        <div class="time-status">
+                            <div class="status-icon play-icon"></div>
+                            <div id="startTimeDisplay" class="time-placeholder">[ -- : -- Z]</div>
+                        </div>
+                        <div class="time-status">
+                            <div class="status-icon stop-icon"></div>
+                            <div id="stopTimeDisplay" class="time-placeholder">[ -- : -- Z]</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-controls">
+            <div class="top-buttons">
+                <button id="captainBtn" class="position-btn">CA</button>
+                <button id="foBtn" class="position-btn">FO</button>
+                <select id="year" class="year-select">
+                    <option value="1">Year 1</option>
+                    <option value="2">Year 2</option>
+                    <option value="3">Year 3</option>
+                    <option value="4">Year 4</option>
+                    <option value="5">Year 5</option>
+                    <option value="6">Year 6</option>
+                    <option value="7">Year 7</option>
+                    <option value="8">Year 8</option>
+                    <option value="9">Year 9</option>
+                    <option value="10">Year 10</option>
+                    <option value="11">Year 11</option>
+                    <option value="12">Year 12</option>
+                </select>
+                <button id="premiumBtn" class="modifier-btn">PREM</button>
+                <button id="vfnBtn" class="modifier-btn">VFN</button>
+            </div>
+
+            <div class="controls">
+                <button id="advancedBtn" class="advanced-btn">Show Advanced Controls</button>
+            </div>
+
+            <div id="advancedControls" style="display: none;">
+                <div class="input-group">
+                    <label>Start Time</label>
+                    <div class="input-with-button">
+                        <input type="text" id="startTime" placeholder="HHMM" maxlength="4">
+                        <button id="applyStartTime" class="apply-btn">Apply</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>End Time</label>
+                    <div class="input-with-button">
+                        <input type="text" id="endTime" placeholder="HHMM" maxlength="4">
+                        <button id="applyEndTime" class="apply-btn">Apply</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button id="startBtn" class="action-btn">START</button>
+                <button id="stopBtn" class="action-btn" disabled>STOP</button>
+                <button id="resetBtn" class="action-btn">RESET</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const payRates = {
+            Captain: {
+                1: 163.29, 2: 171.42, 3: 178.27, 4: 185.36, 
+                5: 192.76, 6: 198.54, 7: 204.49, 8: 210.60,
+                9: 215.85, 10: 221.24, 11: 225.65, 12: 232.00
+            },
+            FO: {
+                1: 57.67, 2: 103.07, 3: 110.73, 4: 116.99,
+                5: 123.56, 6: 129.24, 7: 135.13, 8: 139.19,
+                9: 144.80, 10: 148.39, 11: 151.35, 12: 155.61
+            }
+        };
+
+        let isRunning = false;
+        let hasTimerRun = false;
+        let manualStopApplied = false;
+        let startTimestamp = null;
+        let time = 0;
+        let earnings = 0;
+        let timerInterval;
+
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function getCurrentRate() {
+            const isCaptain = document.getElementById('captainBtn').classList.contains('active');
+            const year = parseInt(document.getElementById('year').value);
+            const isPremium = document.getElementById('premiumBtn').classList.contains('active');
+            const isVfn = document.getElementById('vfnBtn').classList.contains('active');
+            
+            let rate = isCaptain ? payRates.Captain[year] : payRates.FO[year];
+            
+            if (isVfn) {
+                rate *= 2.0;
+            } else if (isPremium) {
+                rate *= 1.3;
+            }
+            
+            return rate;
+        }
+
+        function updateDisplay() {
+            const rate = getCurrentRate();
+            document.getElementById('rate').textContent = `$${rate.toFixed(2)}/hr`;
+            
+            if (hasTimerRun) {
+                const [dollars, cents] = earnings.toFixed(2).split('.');
+                document.getElementById('earnings').innerHTML = 
+                    `<span class="dollars">$${dollars}</span><span class="cents">.${cents}</span>`;
+                document.getElementById('timer').textContent = formatTime(time);
+            }
+        }
+
+        function startTimer() {
+            if (!startTimestamp) {
+                startTimestamp = Date.now() - (time * 1000);
+            }
+            
+            timerInterval = setInterval(() => {
+                time = Math.floor((Date.now() - startTimestamp) / 1000);
+                earnings = (time / 3600) * getCurrentRate();
+                updateDisplay();
+            }, 1000);
+
+            // Display start time
+            const startDate = new Date(startTimestamp);
+            document.getElementById('startTimeDisplay').textContent = 
+                `[ ${String(startDate.getUTCHours()).padStart(2, '0')}:${String(startDate.getUTCMinutes()).padStart(2, '0')} Z]`;
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            if (startTimestamp) {
+                const stopDate = new Date();
+                document.getElementById('stopTimeDisplay').textContent = 
+                    `[ ${String(stopDate.getUTCHours()).padStart(2, '0')}:${String(stopDate.getUTCMinutes()).padStart(2, '0')} Z]`;
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('startBtn').addEventListener('click', () => {
+            isRunning = true;
+            hasTimerRun = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            startTimer();
+            updateAdvancedControlsState();
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            isRunning = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            stopTimer();
+            updateAdvancedControlsState();
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            const previousEarnings = earnings;
+            isRunning = false;
+            hasTimerRun = false;
+            manualStopApplied = false;
+            earnings = 0;
+            time = 0;
+            startTimestamp = null;
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('previousAmount').textContent = 
+                previousEarnings > 0 ? `Previous: $${previousEarnings.toFixed(2)}` : '';
+            
+            document.getElementById('startTime').value = '';
+            document.getElementById('endTime').value = '';
+            document.getElementById('startTimeDisplay').textContent = '[ -- : -- Z]';
+            document.getElementById('stopTimeDisplay').textContent = '[ -- : -- Z]';
+            
+            stopTimer();
+            updateDisplay();
+            updateAdvancedControlsState();
+        });
+
+        document.getElementById('captainBtn').addEventListener('click', function() {
+            if (!this.classList.contains('active')) {
+                this.classList.add('active');
+                document.getElementById('foBtn').classList.remove('active');
+                updateDisplay();
+            }
+        });
+
+        document.getElementById('foBtn').addEventListener('click', function() {
+            if (!this.classList.contains('active')) {
+                this.classList.add('active');
+                document.getElementById('captainBtn').classList.remove('active');
+                updateDisplay();
+            }
+        });
+
+        document.getElementById('year').addEventListener('change', updateDisplay);
+
+        document.getElementById('premiumBtn').addEventListener('click', function() {
+            if (this.classList.contains('active')) {
+                this.classList.remove('active');
+            } else {
+                this.classList.add('active');
+                document.getElementById('vfnBtn').classList.remove('active');
+            }
+            updateDisplay();
+        });
+
+        document.getElementById('vfnBtn').addEventListener('click', function() {
+            if (this.classList.contains('active')) {
+                this.classList.remove('active');
+            } else {
+                this.classList.add('active');
+                document.getElementById('premiumBtn').classList.remove('active');
+            }
+            updateDisplay();
+        });
+
+        document.getElementById('advancedBtn').addEventListener('click', function() {
+            const advancedControls = document.getElementById('advancedControls');
+            const isHidden = advancedControls.style.display === 'none';
+            advancedControls.style.display = isHidden ? 'block' : 'none';
+            this.textContent = isHidden ? 'Hide Advanced Controls' : 'Show Advanced Controls';
+        });
+
+        document.getElementById('applyStartTime').addEventListener('click', function() {
+            const startInput = document.getElementById('startTime').value;
+            
+            if (!/^\d{4}$/.test(startInput)) {
+                alert('Please enter time in HHMM format');
+                return;
+            }
+
+            const startHours = parseInt(startInput.substring(0,2));
+            const startMinutes = parseInt(startInput.substring(2));
+            
+            if (startHours > 23 || startMinutes > 59) {
+                alert('Invalid time format');
+                return;
+            }
+
+            const now = new Date();
+            const startDate = new Date(Date.UTC(
+                now.getUTCFullYear(),
+                now.getUTCMonth(),
+                now.getUTCDate(),
+                startHours,
+                startMinutes,
+                0,
+                0
+            ));
+
+            startTimestamp = startDate.getTime();
+            document.getElementById('startTimeDisplay').textContent = 
+                `[ ${startHours.toString().padStart(2, '0')}:${startMinutes.toString().padStart(2, '0')} Z]`;
+        });
+
+        document.getElementById('applyEndTime').addEventListener('click', function() {
+            if (isRunning) {
+                alert('Stop the timer first to apply manual stop time');
+                return;
+            }
+
+            const endInput = document.getElementById('endTime').value;
+            
+            if (!/^\d{4}$/.test(endInput)) {
+                alert('Please enter time in HHMM format');
+                return;
+            }
+
+            const startTimeDisplay = document.getElementById('startTimeDisplay').textContent;
+            const startMatch = startTimeDisplay.match(/(\d{2}):(\d{2})/);
+            
+            if (!startMatch) {
+                alert('Could not determine start time');
+                return;
+            }
+
+            const startHours = parseInt(startMatch[1]);
+            const startMinutes = parseInt(startMatch[2]);
+            const endHours = parseInt(endInput.substring(0,2));
+            const endMinutes = parseInt(endInput.substring(2));
+            
+            if (endHours > 23 || endMinutes > 59) {
+                alert('Invalid time format');
+                return;
+            }
+
+            const startMinutesSinceMidnight = (startHours * 60) + startMinutes;
+            const endMinutesSinceMidnight = (endHours * 60) + endMinutes;
+
+            let elapsedMinutes = endMinutesSinceMidnight - startMinutesSinceMidnight;
+            if (elapsedMinutes < 0) {
+                elapsedMinutes += 24 * 60;
+            }
+
+            time = elapsedMinutes * 60;
+            earnings = (elapsedMinutes / 60) * getCurrentRate();
+
+            document.getElementById('timer').textContent = formatTime(time);
+            const [dollars, cents] = earnings.toFixed(2).split('.');
+            document.getElementById('earnings').innerHTML = 
+                `<span class="dollars">$${dollars}</span><span class="cents">.${cents}</span>`;
+            document.getElementById('stopTimeDisplay').textContent = 
+                `[ ${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')} Z]`;
+            
+            manualStopApplied = true;
+            updateAdvancedControlsState();
+        });
+
+        function updateAdvancedControlsState() {
+            const startTimeInput = document.getElementById('startTime');
+            const endTimeInput = document.getElementById('endTime');
+            const applyStartBtn = document.getElementById('applyStartTime');
+            const applyEndBtn = document.getElementById('applyEndTime');
+
+            startTimeInput.disabled = !isRunning;
+            applyStartBtn.disabled = !isRunning || startTimeInput.value.length !== 4;
+
+            endTimeInput.disabled = isRunning || !hasTimerRun;
+            applyEndBtn.disabled = isRunning || !hasTimerRun || endTimeInput.value.length !== 4;
+
+            [startTimeInput, applyStartBtn, endTimeInput, applyEndBtn].forEach(element => {
+                if (element.disabled) {
+                    element.style.opacity = '0.5';
+                    element.style.cursor = 'not-allowed';
+                } else {
+                    element.style.opacity = '1';
+                    element.style.cursor = 'pointer';
+                }
+            });
+
+            document.getElementById('startBtn').disabled = isRunning || manualStopApplied;
+        }
+
+        document.getElementById('startTime').addEventListener('input', updateAdvancedControlsState);
+        document.getElementById('endTime').addEventListener('input', updateAdvancedControlsState);
+
+        // Initialize
+        document.getElementById('captainBtn').classList.add('active');
+        updateDisplay();
+        updateAdvancedControlsState();
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
