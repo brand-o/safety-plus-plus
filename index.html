@@ -460,6 +460,116 @@
             left: 50%;
             transform: translateX(-50%);
         }
+
+        .legs-selector {
+            display: flex;
+            background: #0B0F1A;
+            border: 1px solid #5F7470;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .leg-button {
+            flex: 1;
+            padding: 8px 0;
+            border: none;
+            background: transparent;
+            color: #5F7470;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-right: 1px solid #5F7470;
+            transition: background-color 0.2s ease;
+        }
+
+        .leg-button:last-child {
+            border-right: none;
+        }
+
+        .leg-button.active {
+            background-color: #5F7470 !important;
+            color: #FAFAF9 !important;
+        }
+
+        .time-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: space-between;
+        }
+
+        .time-input {
+            flex: 0 1 auto;
+        }
+
+        .time-input input[type="text"] {
+            width: 80px;
+            text-align: center;
+        }
+
+        .compare-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .compare-toggle {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .compare-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #0B0F1A;
+            border: 1px solid #5F7470;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #5F7470;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        .compare-toggle input:checked + .toggle-slider {
+            background-color: #5F7470;
+        }
+
+        .compare-toggle input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+            background-color: #FAFAF9;
+        }
+
+        .comparison-amount {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid #FAFAF9;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            text-align: center;
+            font-weight: bold;
+            width: 200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
     </style>
 </head>
 <body>
@@ -559,30 +669,53 @@
             <div id="advancedControls" style="display: none;">
                 <div class="input-group">
                     <label>Total Legs</label>
-                    <div class="input-with-button">
-                        <input type="number" id="totalLegs" placeholder="4" min="1" max="10" value="4">
-                        <button id="applyTotalLegs" class="apply-btn">Apply</button>
+                    <div class="legs-selector">
+                        <button class="leg-button" data-legs="1">1</button>
+                        <button class="leg-button" data-legs="2">2</button>
+                        <button class="leg-button" data-legs="3">3</button>
+                        <button class="leg-button" data-legs="4">4</button>
+                        <button class="leg-button" data-legs="5">5</button>
+                        <button class="leg-button" data-legs="6">6</button>
+                        <button class="leg-button" data-legs="7">7</button>
+                        <button class="leg-button" data-legs="8">8</button>
                     </div>
                 </div>
-                <div class="input-group">
-                    <label>Start Time</label>
-                    <div class="input-with-button">
-                        <input type="text" id="startTime" placeholder="HHMM" maxlength="4">
-                        <button id="applyStartTime" class="apply-btn">Apply</button>
+
+                <div class="input-group time-controls">
+                    <div class="time-input">
+                        <label>Start Time</label>
+                        <div class="input-with-button">
+                            <input type="text" id="startTime" placeholder="HHMM" maxlength="4">
+                            <button id="applyStartTime" class="apply-btn">Apply</button>
+                        </div>
+                    </div>
+                    <div class="time-input">
+                        <label>End Time</label>
+                        <div class="input-with-button">
+                            <input type="text" id="endTime" placeholder="HHMM" maxlength="4">
+                            <button id="applyEndTime" class="apply-btn">Apply</button>
+                        </div>
                     </div>
                 </div>
-                <div class="input-group">
-                    <label>End Time</label>
-                    <div class="input-with-button">
-                        <input type="text" id="endTime" placeholder="HHMM" maxlength="4">
-                        <button id="applyEndTime" class="apply-btn">Apply</button>
-                    </div>
-                </div>
+
                 <div class="input-group">
                     <label>Custom Rate</label>
                     <div class="input-with-button">
                         <input type="number" id="customRate" placeholder="0.00" step="0.01" min="0">
                         <button id="applyCustomRate" class="apply-btn">Apply</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div class="compare-header">
+                        <label>Compare Rate</label>
+                        <label class="compare-toggle">
+                            <input type="checkbox" id="compareToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="input-with-button">
+                        <input type="number" id="compareRate" placeholder="0.00" step="0.01" min="0" disabled>
                     </div>
                 </div>
             </div>
@@ -679,6 +812,7 @@
                 document.getElementById('earnings').innerHTML = 
                     `<span class="dollars">$${dollars}</span><span class="cents">.${cents}</span>`;
                 document.getElementById('timer').textContent = formatTime(time);
+                updateComparisonDisplay();
             }
         }
 
@@ -1000,39 +1134,6 @@
             });
         }
 
-        document.getElementById('applyTotalLegs').addEventListener('click', function() {
-            const totalLegsInput = document.getElementById('totalLegs');
-            const newMaxLegs = parseInt(totalLegsInput.value);
-            
-            if (newMaxLegs >= 1 && newMaxLegs <= 10) {
-                // Store the old max for comparison
-                const oldMaxLegs = maxLegs;
-                maxLegs = newMaxLegs;
-                
-                // If we're in the middle of a set of legs
-                if (legAmounts.length > 0) {
-                    // If new max is less than current leg count, don't allow the change
-                    if (newMaxLegs < legAmounts.length) {
-                        alert('Cannot reduce max legs below current leg count');
-                        maxLegs = oldMaxLegs;
-                        totalLegsInput.value = oldMaxLegs;
-                        return;
-                    }
-                    
-                    // If we previously had the reset flag set but new max is higher,
-                    // remove the reset flag
-                    if (shouldResetLegs && legAmounts.length < newMaxLegs) {
-                        shouldResetLegs = false;
-                    }
-                }
-                
-                updateLegDisplay();
-            } else {
-                alert('Please enter a number between 1 and 10');
-                totalLegsInput.value = maxLegs;
-            }
-        });
-
         document.getElementById('applyCustomRate').addEventListener('click', function() {
             const customRateInput = document.getElementById('customRate');
             const newRate = parseFloat(customRateInput.value);
@@ -1052,13 +1153,40 @@
             }
         });
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Detect if running as installed app or in browser
+        document.addEventListener('DOMContentLoaded', () => {
             if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
                 document.body.classList.add('standalone');
             } else {
                 document.body.classList.add('in-browser');
             }
+
+            // Initialize leg selection
+            maxLegs = 4;
+            const defaultLegButton = document.querySelector('.leg-button[data-legs="4"]');
+            if (defaultLegButton) {
+                defaultLegButton.classList.add('active');
+            }
+
+            // Add click handlers for leg buttons
+            document.querySelectorAll('.leg-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('.leg-button').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    button.classList.add('active');
+                    maxLegs = parseInt(button.dataset.legs);
+                    
+                    // If we have more legs than the new max, set the reset flag
+                    if (legAmounts.length >= maxLegs) {
+                        shouldResetLegs = true;
+                    }
+                    
+                    // Update the display to reflect any changes
+                    updateLegDisplay();
+                });
+            });
+
+            showAddToHomeScreen();
         });
 
         function showAddToHomeScreen() {
@@ -1094,9 +1222,60 @@
             localStorage.setItem('a2hsPromptDismissed', 'true');
         });
 
-        // Initialize when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            showAddToHomeScreen();
+        // Add this function to calculate comparison amounts
+        function updateComparisonDisplay() {
+            const compareRate = parseFloat(document.getElementById('compareRate').value) || 0;
+            const compareAmount = (time / 3600) * compareRate;
+            
+            const existingComparison = document.querySelector('.comparison-amount');
+            if (existingComparison) {
+                existingComparison.remove();
+            }
+            
+            if (compareRate > 0 && document.getElementById('compareToggle').checked) {
+                // Calculate comparison for current leg
+                const currentCompare = (time / 3600) * compareRate;
+                
+                // Calculate comparison for all completed legs
+                const completedLegsCompare = legAmounts.length > 0 ? 
+                    legAmounts.reduce((sum, amount) => {
+                        const legTime = (amount / getCurrentRate()) * 3600; // Convert back to seconds
+                        return sum + ((legTime / 3600) * compareRate);
+                    }, 0) : 0;
+                
+                // Add total comparison amount after the total amount
+                const totalAmount = document.querySelector('.total-amount');
+                if (totalAmount) {
+                    totalAmount.insertAdjacentHTML('afterend', 
+                        `<div class="comparison-amount">Compare Total: $${(completedLegsCompare + currentCompare).toFixed(2)}</div>`);
+                } else {
+                    const lastAmounts = document.querySelector('.last-amounts');
+                    if (lastAmounts) {
+                        lastAmounts.insertAdjacentHTML('afterend', 
+                            `<div class="comparison-amount">Compare: $${currentCompare.toFixed(2)}</div>`);
+                    }
+                }
+            }
+        }
+
+        // Add these event listeners
+        document.getElementById('compareToggle').addEventListener('change', function() {
+            const compareRate = document.getElementById('compareRate');
+            compareRate.disabled = !this.checked;
+            if (this.checked) {
+                updateComparisonDisplay();
+            } else {
+                const existingComparison = document.querySelector('.comparison-amount');
+                if (existingComparison) {
+                    existingComparison.remove();
+                }
+            }
+        });
+
+        document.getElementById('compareRate').addEventListener('input', function() {
+            if (document.getElementById('compareToggle').checked) {
+                updateComparisonDisplay();
+            }
         });
     </script>
 </body>
