@@ -56,10 +56,9 @@
 
         #earnings {
             font-size: 4rem;
-            font-weight: bold;
+            margin-bottom: 1.5rem;
             display: inline-flex;
             align-items: flex-start;
-            margin-bottom: 1.5rem;
         }
 
         .dollars {
@@ -86,6 +85,20 @@
             border: 1px solid #FAFAF9;
             border-radius: 0.25rem;
             font-size: 0.875rem;
+        }
+
+        .total-amount {
+            margin-top: 0.75rem;
+            padding: 0.5rem;
+            border: 1px solid #FAFAF9;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            text-align: center;
+            font-weight: bold;
+            grid-column: span 2;
+            width: 100%;
+            margin-left: 0;
+            margin-right: 0;
         }
         .info-boxes {
             display: grid;
@@ -185,6 +198,7 @@
             justify-content: center;
             transition: all 0.2s ease;
         }
+
         #captainBtn, #foBtn, .year-select, .advanced-btn {
             border: 2px solid #5F7470;
             color: #5F7470;
@@ -223,6 +237,9 @@
             padding: 0.75rem;
         }
 
+        .controls {
+            margin-bottom: 1.5rem;
+        }
         #advancedControls {
             background: #0B0F1A;
             border-radius: 0.375rem;
@@ -278,6 +295,7 @@
             grid-template-columns: 1fr 1fr 1fr;
             gap: 1rem;
         }
+
         #startBtn, #stopBtn, #resetBtn {
             height: 60px;
             padding: 0.75rem;
@@ -303,12 +321,6 @@
             color: #A33B20;
         }
 
-        #stopBtn:disabled {
-            opacity: 0.5;
-            color: #666;
-            background: transparent;
-        }
-
         #stopBtn.stopped {
             background: #A33B20;
             color: #020209;
@@ -319,17 +331,18 @@
             color: #D17B0F;
         }
 
-        #resetBtn.pressed {
-            animation: resetPress 0.3s ease;
+        #resetBtn:active {
+            background: #D17B0F;
+            color: #020209;
+        }
+
+        #resetBtn:not(:active) {
+            background: transparent;
         }
 
         button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-        }
-
-        .controls {
-            margin-bottom: 1.5rem;
         }
 
         @keyframes resetPress {
@@ -338,14 +351,8 @@
             100% { background: transparent; color: #D17B0F; }
         }
 
-        .total-amount {
-            margin-top: 0.75rem;
-            padding: 0.25rem 0.5rem;
-            border: 1px solid #FAFAF9;
-            border-radius: 0.25rem;
-            font-size: 0.875rem;
-            text-align: center;
-            color: #FAFAF9;
+        #resetBtn.pressed {
+            animation: resetPress 0.3s ease;
         }
     </style>
 </head>
@@ -382,6 +389,7 @@
                 </div>
             </div>
         </div>
+
         <div class="bottom-controls">
             <div class="top-buttons">
                 <button id="captainBtn" class="position-btn">CA</button>
@@ -453,7 +461,9 @@
         let time = 0;
         let earnings = 0;
         let timerInterval;
-        let lastAmounts = [];
+        let legAmounts = [];
+        let shouldResetLegs = false;
+
         function formatTime(seconds) {
             const hours = Math.floor(seconds / 3600);
             const minutes = Math.floor((seconds % 3600) / 60);
@@ -490,6 +500,30 @@
             }
         }
 
+        function updateLegDisplay() {
+            const lastAmountsContainer = document.querySelector('.last-amounts');
+            let html = '';
+            
+            // Display all stored legs in order
+            for (let i = 0; i < legAmounts.length; i++) {
+                html += `<div class="last-amount">L${i + 1}: $${legAmounts[i].toFixed(2)}</div>`;
+            }
+            lastAmountsContainer.innerHTML = html;
+
+            // Calculate and display total only if we have at least one completed leg AND
+            // either a second leg is completed or running
+            const existingTotal = document.querySelector('.total-amount');
+            if (existingTotal) {
+                existingTotal.remove();
+            }
+
+            if (legAmounts.length > 1 || (legAmounts.length === 1 && hasTimerRun)) {
+                const total = legAmounts.reduce((sum, amount) => sum + amount, 0);
+                lastAmountsContainer.insertAdjacentHTML('afterend', 
+                    `<div class="total-amount">Total: $${total.toFixed(2)}</div>`);
+            }
+        }
+
         function startTimer() {
             if (!startTimestamp) {
                 startTimestamp = Date.now() - (time * 1000);
@@ -505,8 +539,8 @@
             const startHours = String(now.getUTCHours()).padStart(2, '0');
             const startMinutes = String(now.getUTCMinutes()).padStart(2, '0');
             
-            const startTimeDisplay = document.querySelector('.time-status:first-child .time-placeholder');
-            startTimeDisplay.textContent = `${startHours}:${startMinutes}`;
+            document.querySelector('.time-status:first-child .time-placeholder').textContent = 
+                `${startHours}:${startMinutes}`;
             document.getElementById('startTime').value = `${startHours}${startMinutes}`;
         }
 
@@ -517,16 +551,17 @@
             const stopHours = String(now.getUTCHours()).padStart(2, '0');
             const stopMinutes = String(now.getUTCMinutes()).padStart(2, '0');
             
-            const stopTimeDisplay = document.querySelector('.time-status:last-child .time-placeholder');
-            stopTimeDisplay.textContent = `${stopHours}:${stopMinutes}`;
+            document.querySelector('.time-status:last-child .time-placeholder').textContent = 
+                `${stopHours}:${stopMinutes}`;
             document.getElementById('endTime').value = `${stopHours}${stopMinutes}`;
         }
         document.getElementById('startBtn').addEventListener('click', () => {
-            if (lastAmounts.length >= 4) {
-                lastAmounts = [];
-                document.querySelector('.last-amounts').innerHTML = '';
+            // If we were flagged to reset legs, do it now
+            if (shouldResetLegs) {
+                legAmounts = [];
+                shouldResetLegs = false;
             }
-            
+
             isRunning = true;
             hasTimerRun = true;
             document.getElementById('startBtn').disabled = true;
@@ -535,6 +570,7 @@
             document.getElementById('stopBtn').classList.remove('stopped');
             startTimer();
             updateAdvancedControlsState();
+            updateLegDisplay(); // Update display to show total if needed
         });
 
         document.getElementById('stopBtn').addEventListener('click', () => {
@@ -549,22 +585,22 @@
 
         document.getElementById('resetBtn').addEventListener('click', function() {
             this.classList.add('pressed');
-            
             setTimeout(() => {
                 this.classList.remove('pressed');
             }, 300);
 
             if (hasTimerRun && earnings > 0) {
-                lastAmounts.unshift(earnings);
-                if (lastAmounts.length > 4) lastAmounts.pop();
+                legAmounts.push(earnings);
                 
-                const lastAmountsContainer = document.querySelector('.last-amounts');
-                lastAmountsContainer.innerHTML = lastAmounts
-                    .map((amount, index) => 
-                        `<div class="last-amount">L${index + 1}: $${amount.toFixed(2)}</div>`
-                    ).join('');
+                // If we just added the 4th leg, flag for reset on next start
+                if (legAmounts.length >= 4) {
+                    shouldResetLegs = true;
+                }
+                
+                updateLegDisplay();
             }
             
+            // Reset all states
             isRunning = false;
             hasTimerRun = false;
             manualStopApplied = false;
@@ -628,6 +664,7 @@
             }
             updateDisplay();
         });
+
         document.getElementById('advancedBtn').addEventListener('click', function() {
             const advancedControls = document.getElementById('advancedControls');
             const isHidden = advancedControls.style.display === 'none';
@@ -765,56 +802,6 @@
                     });
             });
         }
-
-        // Initialize leg tracking
-        let legAmounts = [];
-
-        function updateLegDisplay() {
-            const lastAmountsContainer = document.querySelector('.last-amounts');
-            let html = '';
-            
-            // Display all stored legs in order, keeping their original position
-            for (let i = 0; i < legAmounts.length; i++) {
-                html += `<div class="last-amount">L${i + 1}: $${legAmounts[i].toFixed(2)}</div>`;
-            }
-            lastAmountsContainer.innerHTML = html;
-
-            // Calculate and display total if we have any legs
-            if (legAmounts.length > 0) {
-                // Remove any existing total first
-                const existingTotal = document.querySelector('.total-amount');
-                if (existingTotal) {
-                    existingTotal.remove();
-                }
-
-                // Calculate new total and display it
-                const total = legAmounts.reduce((sum, amount) => sum + amount, 0);
-                lastAmountsContainer.insertAdjacentHTML('afterend', 
-                    `<div class="total-amount">Total: $${total.toFixed(2)}</div>`);
-            }
-        }
-
-        document.getElementById('resetBtn').addEventListener('click', function() {
-            // Add animation class
-            this.classList.add('pressed');
-            setTimeout(() => {
-                this.classList.remove('pressed');
-            }, 300);
-
-            if (hasTimerRun && earnings > 0) {
-                // Add current earnings to next leg position
-                legAmounts.push(earnings);
-                
-                // If we've completed 4 legs, reset the array
-                if (legAmounts.length >= 4) {
-                    legAmounts = [];
-                }
-                
-                updateLegDisplay();
-            }
-            
-            // ... rest of reset code ...
-        });
     </script>
 </body>
 </html>
