@@ -900,13 +900,14 @@
             }
             lastAmountsContainer.innerHTML = html;
 
-            // Calculate and display total
+            // Calculate and display total only if we have more than one leg or a completed leg plus running timer
             const existingTotal = document.querySelector('.total-amount');
             if (existingTotal) {
                 existingTotal.remove();
             }
 
-            if (legAmounts.length > 0 || isRunning) {
+            // Only show total if we have at least one completed leg AND either a second leg is completed or running
+            if (legAmounts.length > 1 || (legAmounts.length === 1 && isRunning)) {
                 // Sum up completed legs with proper rounding
                 const completedTotal = legAmounts.reduce((sum, amount) => {
                     return sum + Math.round(amount * 100) / 100;
